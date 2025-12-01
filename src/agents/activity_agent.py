@@ -4,10 +4,10 @@ from src.utils.config import ANTHROPIC_API_KEY
 from datetime import datetime
 
 class ActivityAgent:
-    def __init__(self, api_key=None):
+    def __init__(self, api_key=None, cost_tracker=None):
         self.client = Anthropic(api_key=api_key or ANTHROPIC_API_KEY)
         self.search_tool = SearchTool()
-    
+        self.cost_tracker = cost_tracker
     def find_activities(self, destination: str, interests: list, start_date: str, end_date: str, coordinates: dict):
         """
         Find weather-appropriate activities for destination based on location and season
@@ -61,7 +61,12 @@ Format as a clear numbered list."""
             max_tokens=1000,
             messages=[{"role": "user", "content": prompt}]
         )
-        
+
+        # Log token usage (optional - for debugging)
+        print(f"  ⚡ Tokens used - Input: {message.usage.input_tokens}, Output: {message.usage.output_tokens}")
+        # Track usage
+        if self.cost_tracker:
+            self.cost_tracker.add_usage(message.usage.input_tokens, message.usage.output_tokens)
         return {
             "activities": message.content[0].text,
             "season_context": season_context,

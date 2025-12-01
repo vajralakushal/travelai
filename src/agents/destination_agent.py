@@ -3,11 +3,12 @@ from src.tools import SearchTool, ImageTool, GeocodingTool
 from src.utils.config import ANTHROPIC_API_KEY
 
 class DestinationAgent:
-    def __init__(self, api_key=None):
+    def __init__(self, api_key=None, cost_tracker=None):
         self.client = Anthropic(api_key=api_key or ANTHROPIC_API_KEY)
         self.search_tool = SearchTool()
         self.image_tool = ImageTool()
         self.geo_tool = GeocodingTool()
+        self.cost_tracker = cost_tracker
     
     def research(self, destination: str, interests: list):
         """
@@ -46,6 +47,11 @@ Keep response under 200 words."""
             messages=[{"role": "user", "content": prompt}]
         )
         
+        # Log token usage (optional - for debugging)
+        print(f"  ⚡ Tokens used - Input: {message.usage.input_tokens}, Output: {message.usage.output_tokens}")
+        # Track usage
+        if self.cost_tracker:
+            self.cost_tracker.add_usage(message.usage.input_tokens, message.usage.output_tokens)
         return {
             "research": message.content[0].text,
             "image": image_data,

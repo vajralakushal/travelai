@@ -3,9 +3,10 @@ from src.tools import SearchTool
 from src.utils.config import ANTHROPIC_API_KEY
 
 class BudgetAgent:
-    def __init__(self, api_key=None):
+    def __init__(self, api_key=None, cost_tracker=None):
         self.client = Anthropic(api_key=api_key or ANTHROPIC_API_KEY)
         self.search_tool = SearchTool()
+        self.cost_tracker = cost_tracker
     
     def estimate_costs(self, destination: str, start_date: str, end_date: str, budget: float, activities: str):
         """
@@ -58,7 +59,12 @@ Keep response under 250 words. Be realistic and honest about costs."""
             max_tokens=500,
             messages=[{"role": "user", "content": prompt}]
         )
-        
+
+        # Log token usage (optional - for debugging)
+        print(f"  ⚡ Tokens used - Input: {message.usage.input_tokens}, Output: {message.usage.output_tokens}")
+        # Track usage
+        if self.cost_tracker:
+            self.cost_tracker.add_usage(message.usage.input_tokens, message.usage.output_tokens)
         return {
             "budget_analysis": message.content[0].text,
             "num_days": num_days,
