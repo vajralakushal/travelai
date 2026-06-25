@@ -7,7 +7,7 @@ services:
       - "8501:8501"
     volumes:
       - ./src:/app/src
-      - ./wanderai.db:/app/wanderai.db
+      - ./travelai.db:/app/travelai.db
     env_file:
       - .env
     restart: unless-stopped
